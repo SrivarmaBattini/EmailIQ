@@ -73,13 +73,28 @@ def get_sender_profile(sender_name: str) -> dict:
 
     if sb:
         try:
-            search_name = sender_name.replace(" ", "")
+            # Try exact match first
             resp = sb.table("email_logs") \
                      .select("*") \
-                     .ilike("sender_name", f"%{search_name}%") \
+                     .eq("sender_name", sender_name) \
                      .order("timestamp") \
                      .execute()
             records = resp.data or []
+            
+            if not records:
+                # Try matching without spaces (e.g. Srivarma Battini -> Srivarmabattini)
+                search_name = sender_name.replace(" ", "")
+                resp = sb.table("email_logs") \
+                         .select("*") \
+                         .eq("sender_name", search_name) \
+                         .order("timestamp") \
+                         .execute()
+                records = resp.data or []
+                
+                # If still nothing, try capitalizing first letter
+                if not records:
+                    resp = sb.table("email_logs").select("*").eq("sender_name", search_name.capitalize()).order("timestamp").execute()
+                    records = resp.data or []
         except Exception as e:
             print(f"Supabase fetch failed: {e}")
 
