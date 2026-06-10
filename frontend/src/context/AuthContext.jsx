@@ -30,8 +30,15 @@ export function AuthProvider({ children }) {
 
   const formatAndSetUser = (supabaseUser) => {
     const email = supabaseUser.email;
-    const namePart = email.split('@')[0];
-    const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1).replace(/[^a-zA-Z0-9]/g, ' ');
+    let formattedName = 'User';
+    
+    // Use full_name from metadata if it exists, otherwise fallback to email prefix
+    if (supabaseUser.user_metadata && supabaseUser.user_metadata.full_name) {
+      formattedName = supabaseUser.user_metadata.full_name;
+    } else {
+      const namePart = email.split('@')[0];
+      formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1).replace(/[^a-zA-Z0-9]/g, ' ');
+    }
     
     setUser({
       id: supabaseUser.id,
@@ -49,11 +56,28 @@ export function AuthProvider({ children }) {
     if (error) throw new Error(error.message);
   };
 
-  const signup = async (email, password) => {
+  const signup = async (email, password, name) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: name
+        }
+      }
     });
+    if (error) throw new Error(error.message);
+  };
+
+  const resetPassword = async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) throw new Error(error.message);
+  };
+
+  const updatePassword = async (newPassword) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw new Error(error.message);
   };
 
@@ -104,7 +128,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, migrateLocalStorageUsers }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, resetPassword, updatePassword, migrateLocalStorageUsers }}>
       {!loading && children}
     </AuthContext.Provider>
   );

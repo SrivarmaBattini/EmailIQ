@@ -7,6 +7,7 @@ import ThreadAnalyser from './pages/ThreadAnalyser'
 import Dashboard from './pages/Dashboard'
 import Coach from './pages/Coach'
 import Auth from './pages/Auth'
+import ResetPassword from './pages/ResetPassword'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 function ProtectedRoute({ children }) {
@@ -31,6 +32,7 @@ export default function App() {
         <Routes>
           <Route path="/"        element={<Landing />} />
           <Route path="/auth"    element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/analyse" element={<ProtectedRoute><Analyser /></ProtectedRoute>} />
           <Route path="/thread"  element={<ProtectedRoute><ThreadAnalyser /></ProtectedRoute>} />
           <Route path="/coach"   element={<ProtectedRoute><Coach /></ProtectedRoute>} />
