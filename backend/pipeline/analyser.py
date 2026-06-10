@@ -13,7 +13,7 @@ def predict_single(task: str, text: str) -> dict:
     if not HF_TOKEN:
         return {"label": "unknown", "confidence": 0.0, "scores": {}, "error": "Missing HF_TOKEN"}
 
-    url = f"https://api-inference.huggingface.co/models/{HF_USER}/email-{task}"
+    url = f"https://router.huggingface.co/hf-inference/models/{HF_USER}/email-{task}"
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {"inputs": text}
 
