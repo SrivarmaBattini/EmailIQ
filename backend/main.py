@@ -3,6 +3,7 @@ main.py - FastAPI application entry point.
 Loads all 7 DeBERTa models and initialises RAG at startup.
 """
 import os
+import asyncio
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -34,10 +35,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    # Load all 7 DeBERTa classifiers
-    print("Loading all 7 DeBERTa models...")
-    load_all_models()
-    print("All models loaded.")
+    # Load all 7 DeBERTa classifiers in a background thread
+    # This prevents Uvicorn from blocking so Render can detect the open port!
+    print("Loading all 7 DeBERTa models in the background...")
+    asyncio.create_task(asyncio.to_thread(load_all_models))
 
     # Initialise RAG — safe even if CSV is missing
     try:
