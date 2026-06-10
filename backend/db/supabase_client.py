@@ -73,9 +73,10 @@ def get_sender_profile(sender_name: str) -> dict:
 
     if sb:
         try:
+            search_name = sender_name.replace(" ", "")
             resp = sb.table("email_logs") \
                      .select("*") \
-                     .eq("sender_name", sender_name) \
+                     .ilike("sender_name", f"%{search_name}%") \
                      .order("timestamp") \
                      .execute()
             records = resp.data or []
