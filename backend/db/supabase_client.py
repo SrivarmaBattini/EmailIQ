@@ -82,7 +82,6 @@ def get_sender_profile(sender_name: str) -> dict:
             records = resp.data or []
             
             if not records:
-                # Try matching without spaces (e.g. Srivarma Battini -> Srivarmabattini)
                 search_name = sender_name.replace(" ", "")
                 resp = sb.table("email_logs") \
                          .select("*") \
