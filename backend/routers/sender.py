@@ -9,5 +9,7 @@ async def get_profile(sender_name: str):
 
 @router.get("/senders")
 async def list_senders():
-    from backend.db.supabase_client import _memory_store
-    return {"senders": list(_memory_store.keys())}
+    # Return empty list since we removed memory_store
+    # Or query Supabase for unique senders if needed
+    return {"senders": []}
+
