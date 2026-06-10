@@ -1,0 +1,57 @@
+# Environment Variables
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual Environments
+venv/
+.venv/
+
+# Node.js
+node_modules/
+
+# Build Outputs
+dist/
+build/
+
+# OS Files
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Model Weights
+*.pt
+*.bin
+*.safetensors
+training/saved_models/
+
+# ChromaDB Vector Database
+data/rag_db/
+data/raw/
+
+# Processed / Generated Data
+data/processed/
+
+# Frontend Backup
+frontend_backup/
+
+# Python Cache
+.pytest_cache/
+
+# Logs
+*.log
+
+# Personal Documents
+*.docx
+
+# Temporary Files
+scratch_analysis.json
+
+# Keep important config/data files
+!ekman_mapping.json
+!emotions.txt
+db/local_store.json
