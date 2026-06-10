@@ -6,8 +6,8 @@ import requests
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-HF_TOKEN = os.getenv("HF_TOKEN", "")
-HF_USER = os.getenv("HF_USER", "Srivarma11")
+HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
+HF_USER = os.getenv("HF_USER", "Srivarma11").strip()
 
 def predict_single(task: str, text: str) -> dict:
     if not HF_TOKEN:
@@ -25,7 +25,10 @@ def predict_single(task: str, text: str) -> dict:
                 time.sleep(2)
                 continue
             
-            response.raise_for_status()
+            try:
+                response.raise_for_status()
+            except Exception as e:
+                return {"label": "unknown", "confidence": 0.0, "scores": {}, "error": f"{e} - {response.text}"}
             data = response.json()
             
             # The API returns a list of lists: [[{"label": "polite", "score": 0.99}, ...]]
