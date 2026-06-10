@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from backend.models.loader      import load_all_models
+
 from backend.routers.analyse    import router as analyse_router
 from backend.routers.rewrite    import router as rewrite_router
 from backend.routers.thread     import router as thread_router
@@ -35,10 +35,7 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    # Load all 7 DeBERTa classifiers in a background thread
-    # This prevents Uvicorn from blocking so Render can detect the open port!
-    print("Loading all 7 DeBERTa models in the background...")
-    asyncio.create_task(asyncio.to_thread(load_all_models))
+    print("API starting up. Models will be called via HuggingFace Inference API.")
 
     # Initialise RAG — safe even if CSV is missing
     try:
