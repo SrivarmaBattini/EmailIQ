@@ -35,7 +35,14 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup():
-    print("API starting up. Models will be called via HuggingFace Inference API.")
+    print("API starting up. Loading local models...")
+    try:
+        from backend.models.loader import load_all_models
+        # Run loading in a thread to avoid blocking the event loop completely, 
+        # though during startup blocking is usually acceptable.
+        load_all_models()
+    except Exception as e:
+        print(f"Error loading models: {e}")
 
     # Initialise RAG — safe even if CSV is missing
     try:
