@@ -68,47 +68,50 @@ SAFE_PHRASES = [
 
 def hybrid_pa_result(model_result: dict, text: str) -> dict:
     """
-    Combines model output with rule engine.
-    If rule_confidence > model_confidence → override with rule result.
-    If text contains very polite standard phrases, override false positive PA.
+    Combines model output with rule engine using Ensemble Weighting.
+    Final Confidence = (Model Confidence * 0.6) + (Rule Confidence * 0.4)
     """
     rule = rule_engine_score(text)
-    model_conf = model_result.get("confidence", 0.0)
-    model_label = model_result.get("label", "neutral")
-    model_is_pa = model_label == "passive_aggressive"
+    
+    # If the model didn't classify it as PA, the confidence for PA is essentially 1 - confidence
+    # But since the model output is just the max confidence of whatever label it chose:
+    # We should get the actual PA probability. Luckily, `model_result["scores"]` has the raw probabilities.
+    raw_scores = model_result.get("scores", {})
+    model_pa_prob = raw_scores.get("passive_aggressive", 0.0)
 
+    rule_conf = rule["confidence"]
+    
     text_lower = text.lower().strip()
     
-    # 1. Override false positives from the ML model
-    if model_is_pa:
-        for safe in SAFE_PHRASES:
-            if safe in text_lower:
-                return {
-                    "label":      "neutral",
-                    "confidence": 1.0,
-                    "scores":     model_result.get("scores", {}),
-                    "source":     "rule_whitelist",
-                    "triggered":  safe,
-                }
+    # 1. White-list Override (Extreme Safety)
+    # If it contains very polite safe phrases, we still want to strongly reduce PA probability
+    for safe in SAFE_PHRASES:
+        if safe in text_lower:
+            # Force low PA probability
+            rule_conf = 0.0
+            model_pa_prob *= 0.2 # Dramatically reduce model's PA score
 
-    # 2. Standard hybrid logic
-    if rule["confidence"] >= model_conf:
-        label = "passive_aggressive" if rule["pa"] else "neutral"
+    # 2. Ensemble Weighting Math
+    final_pa_confidence = (model_pa_prob * 0.6) + (rule_conf * 0.4)
+    
+    # Threshold for deciding it's PA
+    if final_pa_confidence >= 0.5:
         return {
-            "label":      label,
-            "confidence": rule["confidence"],
-            "scores":     model_result.get("scores", {}),
-            "source":     rule["source"],
+            "label":      "passive_aggressive",
+            "confidence": round(final_pa_confidence, 4),
+            "scores":     raw_scores,
+            "source":     "ensemble_blended",
             "triggered":  rule.get("phrase") or rule.get("matches", []),
         }
-
-    return {
-        "label":      model_label,
-        "confidence": model_conf,
-        "scores":     model_result.get("scores", {}),
-        "source":     "model",
-        "triggered":  [],
-    }
+    else:
+        # If it's neutral, we invert the confidence to represent "neutral confidence"
+        return {
+            "label":      "neutral",
+            "confidence": round(1.0 - final_pa_confidence, 4),
+            "scores":     raw_scores,
+            "source":     "ensemble_blended",
+            "triggered":  [],
+        }
 
 SARCASM_PATTERNS = [
     r'\boh,\s+great\b',
@@ -137,26 +140,30 @@ def rule_engine_sarcasm_score(text: str) -> dict:
 
 def hybrid_sarcasm_result(model_result: dict, text: str) -> dict:
     """
-    Combines model output with rule engine for sarcasm.
+    Combines model output with rule engine for sarcasm using Ensemble Weighting.
     """
     rule = rule_engine_sarcasm_score(text)
-    model_conf = model_result.get("confidence", 0.0)
-    model_label = model_result.get("label", "neutral")
+    
+    raw_scores = model_result.get("scores", {})
+    model_sarcasm_prob = raw_scores.get("sarcastic", 0.0)
+    rule_conf = rule["confidence"]
 
-    if rule["confidence"] >= model_conf:
-        label = "sarcastic" if rule["sarcastic"] else "neutral"
+    # Ensemble Weighting
+    final_sarcasm_confidence = (model_sarcasm_prob * 0.6) + (rule_conf * 0.4)
+
+    if final_sarcasm_confidence >= 0.5:
         return {
-            "label":      label,
-            "confidence": rule["confidence"],
-            "scores":     model_result.get("scores", {}),
-            "source":     rule["source"],
+            "label":      "sarcastic",
+            "confidence": round(final_sarcasm_confidence, 4),
+            "scores":     raw_scores,
+            "source":     "ensemble_blended",
             "triggered":  rule.get("matches", []),
         }
-
-    return {
-        "label":      model_label,
-        "confidence": model_conf,
-        "scores":     model_result.get("scores", {}),
-        "source":     "model",
-        "triggered":  [],
-    }
+    else:
+        return {
+            "label":      "neutral",
+            "confidence": round(1.0 - final_sarcasm_confidence, 4),
+            "scores":     raw_scores,
+            "source":     "ensemble_blended",
+            "triggered":  [],
+        }
