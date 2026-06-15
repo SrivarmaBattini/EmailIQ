@@ -24,16 +24,6 @@ uvicorn backend.main:app --reload --port 8000
 
 API docs available at: http://localhost:8000/docs
 
-## Deploy to Render.com (Free)
-
-1. Push code to GitHub
-2. Go to render.com → New Web Service
-3. Connect your GitHub repo
-4. Set Build Command: `pip install -r backend/requirements.txt`
-5. Set Start Command: `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-6. Add environment variables in Render dashboard
-7. Deploy
-
 ## Endpoints
 
 | Method | URL                    | Description             |
