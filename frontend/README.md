@@ -17,6 +17,7 @@ Open http://localhost:5173
 | /            | Landing page                       |
 | /analyse     | Single email analyser (main page)  |
 | /thread      | Email thread tone drift analyser   |
+| /ai assistant| To generate email with help of AI  |
 | /dashboard   | Sender communication profile       |
 
 ## Tech Stack
